@@ -1,0 +1,14 @@
+graph {
+   "Korhonen-1997";
+   "Hyvone-Malmi:1993";
+   "Goldwasser:2002";
+   "Isong:2001";
+   "Isong:2001"-- "Jackson-Usher:1997";
+   "Isong:2001"-- "Jones:2000";
+   "Isong:2001"-- "Reek:1989";
+   "Mengel-etal:1999";
+   "Roberts:2000";
+   "Churcher-etal:1998";
+   "Reek:1989";
+   "Arnow:1995";
+}

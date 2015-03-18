@@ -1,0 +1,23 @@
+graph {
+   "Chaves-etal:2013";
+   "Sirotheau-etal:2011";
+   "Mota-etal:2008";
+   "Moreira-Favero:2009";
+   "Kurnia-etal:2001";
+   "Franca-Soares:2011";
+   "Ferradin-Stephani:2005";
+   "Campos-Ferreira:2004";
+   "software:moodle";
+   "Souza-etal:2011:cseet";
+   "Souza-etal:2012";
+   "Chaves-etal:2013"-- "Sirotheau-etal:2011";
+   "Chaves-etal:2013"-- "Mota-etal:2008";
+   "Chaves-etal:2013"-- "Moreira-Favero:2009";
+   "Chaves-etal:2013"-- "Kurnia-etal:2001";
+   "Chaves-etal:2013"-- "Franca-Soares:2011";
+   "Chaves-etal:2013"-- "Ferradin-Stephani:2005";
+   "Chaves-etal:2013"-- "Campos-Ferreira:2004";
+   "Chaves-etal:2013"-- "software:moodle";
+   "Chaves-etal:2013"-- "Souza-etal:2011:cseet";
+   "Chaves-etal:2013"-- "Souza-etal:2012";
+}
