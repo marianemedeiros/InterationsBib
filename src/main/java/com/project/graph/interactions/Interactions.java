@@ -1,28 +1,23 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.project.graph.interactions;
 
-import com.project.bibEntries.BibEntries;
-import com.project.bibEntries.Cor;
-import java.io.BufferedWriter;
+import com.project.bibEntries.Node;
+import com.project.bibEntries.Color;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import namePaths.FilePaths;
 import net.sf.jabref.BibtexDatabase;
 import net.sf.jabref.BibtexEntry;
-import org.openide.util.Exceptions;
 
 /**
  *
@@ -31,12 +26,14 @@ import org.openide.util.Exceptions;
 public abstract class Interactions {
 
     BibtexDatabase database;
-    File extension; // novo arquivo gerado
-    FileWriter writer; // responsavel pela escrita no novo arquivo.
-
-    BibEntries seed;
-    ArrayList<BibEntries> entries; // lista de entries da base.
-    HashMap<String, BibEntries> entriesMap; // map de entries da base.
+    
+    Node<BibtexEntry> seed;
+    
+    ArrayList<Node<BibtexEntry>> entries; // lista de entries da base.
+    
+    HashMap<String, Node<BibtexEntry>> entriesMap; // map de entries da base.
+    
+    protected StringWriter writer;
 
     abstract public void criarFile() throws IOException;
 
@@ -44,93 +41,97 @@ public abstract class Interactions {
 
     abstract public void gravaEdges(BibtexEntry source, BibtexEntry target) throws IOException;
 
-    abstract public void fechaFile();
+    abstract public String fechaFile();
 
     public void geraFile(String seed) throws IOException, InterruptedException {
 
-        getAllEntries(); // insere cada elemento da base em um map e também grava os nodes (elemento) no arquivo .gml
+    	// insere cada elemento da base em um map (bibtexkey -> bibtexentry
+        getAllEntries();
 
         // colocando a semente na lista
-        BibEntries b = this.entriesMap.get(seed);
-        b.setColor(Cor.Branco);
+        Node<BibtexEntry> b = this.entriesMap.get(seed);
+        b.setColor(Color.WHITE);
         this.entries.add(b);
 
+        // Breadth-first search using b as root
         BFS(b);
 
     }
 
     private void getAllEntries() {
         for (BibtexEntry entry : database.getEntries()) {
-            if (!entry.getField("bibtexkey").contains("proceedings") && !entry.getField("bibtexkey").contains("journal")) {
-                this.entriesMap.put(entry.getField("bibtexkey"), new BibEntries(entry, Cor.Branco));
+            if (! entry.getField("bibtexkey").startsWith("proceedings") && ! entry.getField("bibtexkey").startsWith("journal")) {
+                this.entriesMap.put(entry.getField("bibtexkey"), new Node<BibtexEntry>(entry, Color.WHITE));
             }
         }
     }
 
-    private void BFS(BibEntries entry) throws IOException, InterruptedException {
-        ArrayList<String> its = new ArrayList<String>();
+    private void BFS(Node<BibtexEntry> entry) throws IOException, InterruptedException {
+        int i = 0;
 
-        Integer i = 0;
-        while (!this.entries.isEmpty()) {
-            ArrayList<BibEntries> copyEntries = (ArrayList<BibEntries>) this.entries.clone();
+        criarFile();
+        while (! this.entries.isEmpty()) {
             i++;
-            criarFile();
+        	String it = "iteration".concat(Integer.toString(i, 10));
+            File currentLevelFile = new File(FilePaths.grafo + "/" + it + ".dot"); // novo arquivo gerado
+            FileWriter currentLevelWriter = new FileWriter(currentLevelFile); // responsavel pela escrita no novo arquivo.
+        	ArrayList<Node<BibtexEntry>> currentLevelNodes = (ArrayList<Node<BibtexEntry>>) this.entries.clone();
 
-            while (!copyEntries.isEmpty()) {
-                BibEntries e = this.entries.remove(0);
-                copyEntries.remove(0);
+            while (! currentLevelNodes.isEmpty()) {
+            	// Process head of the list
+                Node<BibtexEntry> currentNode = this.entries.remove(0);
+                currentLevelNodes.remove(0);
+                if (currentNode.getColor() == Color.WHITE || currentNode.getColor() == Color.GREY) {
+                	if (currentNode.getColor() == Color.WHITE) {
+                		gravaNodes(currentNode.getEntry());
+                	}
 
-                gravaNodes(e.getEntry());
-
-                ArrayList<BibEntries> refs = getReferences(e);
-                for (BibEntries ref : refs) {
-                    if (ref.getColor().equals(Cor.Branco)) {
-                        ref.setColor(Cor.Cinza);
-                        this.entries.add(ref);
-
-                        gravaNodes(ref.getEntry());
-                    }
+               		// Process children of the head of the list
+	                ArrayList<Node<BibtexEntry>> childrenOfCurrentNode = getReferences(currentNode);
+	                for (Node<BibtexEntry> ref : childrenOfCurrentNode) {
+	                    if (ref.getColor().equals(Color.WHITE)) {
+	                    	gravaEdges(currentNode.getEntry(), ref.getEntry());
+	                        ref.setColor(Color.GREY);
+	                        gravaNodes(ref.getEntry());
+	                        entries.add(ref); // Add new node to BFS 
+	                    }
+	                }
+	                currentNode.setColor(Color.BLACK);
                 }
-
-                for (BibEntries ref : refs) {
-                    gravaEdges(e.getEntry(), ref.getEntry());
-                }
-                e.setColor(Cor.Preto);
             }
 
-            fechaFile();
-            this.writer.close();
-
-            String it = "iteration".concat(i.toString());
-            // dot -Tpng iteration1.dot  > iteration1.png
-            its.add("dot -Tpng " + it + ".dot > " + it + ".png");
-
-            copy(it);
+            currentLevelWriter.write(writer.getBuffer().toString());
+            currentLevelWriter.write(fechaFile());
+            currentLevelWriter.close();
+            
+            // copy(it);
 
             // deletar este arquivo
-            destroyFile();
-
+            // destroyFile();
         }
+        /*
         if (extension.getName().contains(".dot")) {
-            gravaSh(its);
+            its.add("dot -Tpng " + it + ".dot > " + it + ".png");
+            // gravaSh(its);
         }
+        */
+        this.writer.close();
+
     }
 
     private void destroyFile() throws IOException {
-        this.extension.delete();
+        // this.extension.delete();
     }
 
-    private ArrayList<BibEntries> getReferences(BibEntries e) {
-        ArrayList<BibEntries> references = new ArrayList<BibEntries>();
+    private ArrayList<Node<BibtexEntry>> getReferences(Node<BibtexEntry> e) {
+        ArrayList<Node<BibtexEntry>> references = new ArrayList<Node<BibtexEntry>>();
 
         String r = e.getEntry().getField("references");
-        String[] refs = null;
         if (r != null) {
-            refs = r.split(",");
-
+        	String[] refs = r.split(",");
             for (String aux : refs) {
                 aux = aux.replace(" ", "");
-                BibEntries newBib = this.entriesMap.get(aux);
+                Node<BibtexEntry> newBib = this.entriesMap.get(aux);
                 references.add(newBib);
             }
         }
@@ -138,6 +139,7 @@ public abstract class Interactions {
     }
 
     private void copy(String it) throws FileNotFoundException, IOException {
+    	/*
         File destino = null;
 
         if (extension.getName().contains(".dot")) {
@@ -153,6 +155,7 @@ public abstract class Interactions {
         fcOrigem.transferTo(0, fcOrigem.size(), fcDestino);
         fisOrigem.close();
         fisDestino.close();
+        */
     }
 
     private void generateImages() throws IOException, InterruptedException {

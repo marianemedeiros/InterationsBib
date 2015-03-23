@@ -5,7 +5,7 @@
  */
 package com.project.graph.interactions;
 
-import com.project.bibEntries.BibEntries;
+import com.project.bibEntries.Node;
 import com.project.bibEntries.PrepareDatabase;
 import java.io.File;
 import java.io.FileWriter;
@@ -30,8 +30,8 @@ public class InteractionsGML extends Interactions{
         database = data.getDatabase();
         
         
-        entries = new ArrayList<BibEntries>();
-        entriesMap = new HashMap<String,BibEntries>();
+        entries = new ArrayList<Node>();
+        entriesMap = new HashMap<String,Node>();
     }
 
     @Override
