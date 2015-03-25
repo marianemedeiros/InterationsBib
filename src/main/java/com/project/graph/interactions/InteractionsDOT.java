@@ -5,14 +5,11 @@ import com.project.bibEntries.Node;
 import com.project.bibEntries.PrepareDatabase;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import namePaths.FilePaths;
 import net.sf.jabref.BibtexEntry;
 
 /**
@@ -47,8 +44,13 @@ public class InteractionsDOT extends Interactions {
     }
 
     @Override
-    public void gravaEdges(BibtexEntry source, BibtexEntry target) throws IOException {
-        writer.write( "   \"" + source.getField("bibtexkey") + "\"" + "-- " + "\"" + target.getField("bibtexkey") + "\";" + "\n");
+    public void gravaEdges(BibtexEntry source, BibtexEntry target, char type) throws IOException {
+        if(type == FOWARD){
+            writer.write( "   \"" + source.getField("bibtexkey") + "\"" + "-- " + "\"" + target.getField("bibtexkey") + "\""
+                    + " [style=dotted];\n");
+        }else if(type == BACKWARD){
+            writer.write( "   \"" + source.getField("bibtexkey") + "\"" + "-- " + "\"" + target.getField("bibtexkey") + "\";" + "\n");
+        }
     }
 
 }

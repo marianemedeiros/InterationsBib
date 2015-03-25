@@ -10,6 +10,7 @@ import com.project.bibEntries.PrepareDatabase;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import namePaths.FilePaths;
@@ -30,34 +31,27 @@ public class InteractionsGML extends Interactions{
         database = data.getDatabase();
         
         
-        entries = new ArrayList<Node>();
-        entriesMap = new HashMap<String,Node>();
+        entries = new ArrayList<Node<BibtexEntry>>();
+        entriesMap = new HashMap<String, Node<BibtexEntry>>();
+        writer = new StringWriter();
     }
 
     @Override
     public void criarFile() throws IOException{
-        extension = new File(FilePaths.grafo.concat(EX));
-        this.writer = new FileWriter(extension);
-        this.writer.write("graph\n[");
+        //extension = new File(FilePaths.grafo.concat(EX));
+        writer.write("graph\n[");
     }
     
     @Override
-    public void fechaFile(){
-        try {
-            this.writer.write("\n]");
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }
+    public String fechaFile(){
+        //this.writer.write("\n]");
+        return "\n]";
     }
     
     @Override
     public void gravaNodes(BibtexEntry entry) {
-        try {
-            this.writer.write("\n  node\n  [\n   id " + (Integer.parseInt(entry.getId()) + 1) + 
-                              "\n   label " + "\""+ entry.getField("bibtexkey") + "\""+ "\n  ]");
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }
+        this.writer.write("\n  node\n  [\n   id " + (Integer.parseInt(entry.getId()) + 1) +
+                "\n   label " + "\""+ entry.getField("bibtexkey") + "\""+ "\n  ]");
     }
 
     @Override
@@ -65,5 +59,9 @@ public class InteractionsGML extends Interactions{
          this.writer.write("\n  edge\n  [\n   source " + (Integer.parseInt(source.getId()) + 1) + 
                 "\n   target " + (Integer.parseInt(target.getId()) + 1) + "\n  ]");
     }
+
+
+
+
 
 }
